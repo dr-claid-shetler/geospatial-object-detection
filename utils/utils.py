@@ -72,7 +72,9 @@ def evaluate(model,
 
     # compute mAP by comparing all detections and all annotations
     average_precisions = {}
-    
+    recalls = {}
+    precisions = {}
+
     for label in range(generator.num_classes()):
         false_positives = np.zeros((0,))
         true_positives  = np.zeros((0,))
@@ -126,8 +128,10 @@ def evaluate(model,
         # compute average precision
         average_precision  = compute_ap(recall, precision)  
         average_precisions[label] = average_precision
+        recalls[label] = recall
+        precisions[label] = precision
 
-    return average_precisions    
+    return recalls, precisions, average_precisions
 
 def correct_yolo_boxes(boxes, image_h, image_w, net_h, net_w):
     if (float(net_w)/image_w) < (float(net_h)/image_h):
@@ -163,8 +167,11 @@ def do_nms(boxes, nms_thresh):
             for j in range(i+1, len(sorted_indices)):
                 index_j = sorted_indices[j]
 
-                if bbox_iou(boxes[index_i], boxes[index_j]) >= nms_thresh:
-                    boxes[index_j].classes[c] = 0
+                tempIOU = bbox_iou(boxes[index_i], boxes[index_j])
+                if tempIOU >= nms_thresh:
+                    #boxes[index_j].classes[c] = 0
+                    boxes[index_j].classes[c] = boxes[index_j].classes[c] * np.exp(-(tempIOU * tempIOU)/0.5)
+                    #boxes[index_j].classes[c] = boxes[index_j].classes[c] * (1 - tempIOU)
 
 def decode_netout(netout, anchors, obj_thresh, net_h, net_w):
     grid_h, grid_w = netout.shape[:2]

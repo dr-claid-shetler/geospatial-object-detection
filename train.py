@@ -77,7 +77,7 @@ def create_callbacks(saved_weights_name, tensorboard_logs, model_to_save):
     early_stop = EarlyStopping(
         monitor     = 'loss', 
         min_delta   = 0.01, 
-        patience    = 7, 
+        patience    = 5,
         mode        = 'min', 
         verbose     = 1
     )
@@ -256,6 +256,9 @@ def _main_(args):
     ###############################
     callbacks = create_callbacks(config['train']['saved_weights_name'], config['train']['tensorboard_dir'], infer_model)
 
+    train_model.summary()
+
+
     train_model.fit_generator(
         generator        = train_generator, 
         steps_per_epoch  = len(train_generator) * config['train']['train_times'], 
@@ -283,7 +286,7 @@ def _main_(args):
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='train and evaluate YOLO_v3 model on any dataset')
-    argparser.add_argument('-c', '--conf', help='path to configuration file')   
+    argparser.add_argument('-c', '--conf', help='path to configuration file', default='config.json')
 
     args = argparser.parse_args()
     _main_(args)
